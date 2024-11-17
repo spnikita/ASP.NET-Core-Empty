@@ -7,8 +7,4 @@
     <RootNamespace>ASP.NET_Core_Empty</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Log\" />
-  </ItemGroup>
-
 </Project>
