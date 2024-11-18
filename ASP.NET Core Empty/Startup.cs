@@ -1,4 +1,6 @@
-﻿namespace ASP.NET_Core_Empty
+﻿using ASP.NET_Core_Empty.Middlewares;
+
+namespace ASP.NET_Core_Empty
 {
     public class Startup
     {
@@ -34,6 +36,8 @@
                 });
             }
 
+            Console.WriteLine($"Launching project from: {env.ContentRootPath}");
+
             if (env.IsDevelopment() || env.IsStaging())
             {
                 app.UseDeveloperExceptionPage();
@@ -41,29 +45,11 @@
 
             app.UseRouting();
 
-            //Используем метод Use, чтобы запрос передавался дальше по конвейеру
-            app.Use(async (context, next) =>
-            {
-                // Строка для публикации в лог
-                string logMessage = $"[{DateTime.Now}]: New request to http://{context.Request.Host.Value + context.Request.Path}{Environment.NewLine}";
+            // Поддержка статических файлов
+            app.UseStaticFiles();
 
-                // Путь до лога (опять-таки, используем свойства IWebHostEnvironment)
-                string logFilePath = Path.Combine(env.ContentRootPath, "Logs", "RequestLog.txt");
-
-                // Используем асинхронную запись в файл
-                await File.AppendAllTextAsync(logFilePath, logMessage);
-
-                await next.Invoke();
-            });
-
-            //Добавляем компонент для логирования запросов с использованием метода Use.
-            app.Use(async (context, next) =>
-            {
-                // Для логирования данных о запросе используем свойства объекта HttpContext
-                Console.WriteLine($"[{DateTime.Now}]: New request to http://{context.Request.Host.Value + context.Request.Path}");
-
-                await next.Invoke();
-            });
+            // Подключаем логирвоание с использованием ПО промежуточного слоя
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
@@ -77,10 +63,12 @@
             app.Map("/config", Config);
 
             // Добавим в конвейер запросов обработчик самым простым способом
-            app.Run(async (context) =>
-            {
-                await context.Response.WriteAsync($"Page not found");
-            });
+            //app.Run(async (context) =>
+            //{
+            //    await context.Response.WriteAsync($"Page not found");
+            //});
+
+            app.UseStatusCodePages();
         }
     }
 }
